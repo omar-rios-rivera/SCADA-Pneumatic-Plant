@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2023/02/20 11:07:49.000.254,=C:\Users\Rockwell Automation\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2023/03/10 12:30:22.000.279,=C:\Users\Rockwell Automation\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2023/03/10 12:35:48.000.216,=C:\Users\Rockwell Automation\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2023/03/10 12:44:10.000.650,\\vmware-host\Shared Folders\Rockwell Automation 2023-2\Rockwell Automation 2023-2\Laboratorio\L2\V3\L2.pas=C:\Users\Rockwell Automation\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2023/03/10 12:44:10.000.650,\\vmware-host\Shared Folders\Rockwell Automation 2023-2\Rockwell Automation 2023-2\Laboratorio\L2\V3\L2.dfm=C:\Users\Rockwell Automation\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2023/03/10 13:02:12.000.304,\\vmware-host\Shared Folders\Rockwell Automation 2023-2\Rockwell Automation 2023-2\Laboratorio\L2\V3\L2_2.dproj=C:\Users\Rockwell Automation\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2023/03/12 19:21:13.000.335,\\vmware-host\Shared Folders\Rockwell Automation 2023-2\Rockwell Automation 2023-2\Laboratorio\L2\V3\L2.pas=C:\Users\Rockwell Automation\Desktop\L2\L2.pas</Transaction>
+    <Transaction>2023/03/12 19:21:13.000.335,\\vmware-host\Shared Folders\Rockwell Automation 2023-2\Rockwell Automation 2023-2\Laboratorio\L2\V3\L2.dfm=C:\Users\Rockwell Automation\Desktop\L2\L2.dfm</Transaction>
+    <Transaction>2023/03/12 19:27:05.000.314,\\vmware-host\Shared Folders\Rockwell Automation 2023-2\Rockwell Automation 2023-2\Laboratorio\L2\V3\L2_2.dproj=C:\Users\Rockwell Automation\Desktop\L2\L2_2.dproj</Transaction>
+    <Transaction>2023/03/21 22:13:03.000.812,C:\Users\Rockwell Automation\Desktop\PROY1\L2_2.dproj=C:\Users\Rockwell Automation\Desktop\PROY1\PROY1.dproj</Transaction>
+    <Transaction>2023/03/21 22:13:18.000.799,C:\Users\Rockwell Automation\Desktop\PROY1\L2.pas=C:\Users\Rockwell Automation\Desktop\PROY1\PROY1.pas</Transaction>
+    <Transaction>2023/03/21 22:13:18.000.799,C:\Users\Rockwell Automation\Desktop\PROY1\L2.dfm=C:\Users\Rockwell Automation\Desktop\PROY1\PROY1.dfm</Transaction>
+    <Transaction>2023/03/21 22:15:49.000.236,C:\Users\Rockwell Automation\Desktop\PROY1\PROY1.dfm=C:\Users\Rockwell Automation\Desktop\PROY1\PROY1_MAIN.dfm</Transaction>
+    <Transaction>2023/03/21 22:15:49.000.236,C:\Users\Rockwell Automation\Desktop\PROY1\PROY1.pas=C:\Users\Rockwell Automation\Desktop\PROY1\PROY1_MAIN.pas</Transaction>
+  </Transactions>
+</BorlandProject>

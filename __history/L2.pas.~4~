@@ -1,0 +1,312 @@
+unit L2;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls,
+  Vcl.Imaging.pngimage, Vcl.Imaging.jpeg, dOPCDA, dOPCDlgBrowse, dOPCComn, dOPCIntf,
+  dOPCOld, System.ImageList, Vcl.ImgList;
+
+type
+  TForm1 = class(TForm)
+    pMain: TPanel;
+    Label1: TLabel;
+    bConnect: TSpeedButton;
+    bDisconnect: TSpeedButton;
+    bStart: TButton;
+    bStop: TButton;
+    cbServer: TComboBox;
+    Panel1: TPanel;
+    Label2: TLabel;
+    cbTopic: TComboBox;
+    Image1: TImage;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    bLeft: TButton;
+    bRight: TButton;
+    OPCClient: TdOPCDAClient;
+    imgRobot: TImage;
+    Panel2: TPanel;
+    procedure bLeftClick(Sender: TObject);
+    procedure bRightClick(Sender: TObject);
+    procedure cbServerDropDown(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure bConnectClick(Sender: TObject);
+    procedure bDisconnectClick(Sender: TObject);
+    procedure cbTopicChange(Sender: TObject);
+    procedure cbTopicDropDown(Sender: TObject);
+    procedure OPCClientConnect(Sender: TObject);
+    procedure OPCClientDisconnect(Sender: TObject);
+    procedure OPCClientTimeout(Sender: TObject);
+    procedure bStartMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure bStartMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure bStopMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure bStopMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pMainClick(Sender: TObject);
+    procedure imgRobotClick(Sender: TObject);
+    procedure OPCClientDatachange(Sender: TObject; ItemList: TdOPCItemList);
+
+  private
+  TAGS: TdOPCGroup;
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+  START_V: TdOPCItem;
+  STOP_V: TdOPCItem;
+  LAMP: TdOPCItem;
+
+implementation
+
+{$R *.dfm}     // Directivas de compilador
+
+
+// Método de pulsar botón conectar
+procedure TForm1.bConnectClick(Sender: TObject);
+begin
+   if Trim(cbServer.Text) <> '' then      // Condición de servidor seleccionado
+   begin
+     // Memo1.Clear;
+     OPCClient.ServerName     := cbServer.Text;// Obtiene nombre de servidor de menu
+     OPCClient.Active         := true;         // Se conecta al servidor
+     cbTopic.Enabled:= true;                   // Habilita menú de tópicos
+     bStart.Enabled:= true;                    // Habilita botón de START
+     bStop.Enabled:= true;                     // Habilita botón de STOP
+
+   end
+   else        // Condición de servidor no seleccionado
+     ShowMessage('Primero selecciona un servidor OPC');
+end;
+
+// Método de pulsar botón desconectar
+procedure TForm1.bDisconnectClick(Sender: TObject);
+begin
+  OPCClient.Active := false;          // Se desconecta del servidor
+  OPCClient.OPCGroups.RemoveAll;      // Elimina Grupos
+  cbTopic.Items.Clear();              // Elimina texto de menú
+  cbTopic.Enabled:= false;            // Deshabilita menú de tópicos
+  bStart.Enabled:= false;             // Desabilita botón de START
+  bStop.Enabled:= false;              // Deshabilita botón de STOP
+end;
+
+// Método de menú desplegable de servidores
+procedure TForm1.cbServerDropDown(Sender: TObject);
+begin
+  OPCClient.Protocol := coCOM;
+  Screen.Cursor := crHourGlass;
+  try
+    GetOPCDAServers(cbServer.Items,OPCClient.Protocol);        // get Servernames from registry
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+
+procedure TForm1.cbTopicChange(Sender: TObject);
+begin
+  TAGS := OPCClient.OPCGroups.Add('TAGS'); // Añade grupo
+  TAGS.CreateOnDatachange := true; // NO OnDatachange events: you can change it to true if you want
+
+
+  { Agrega etiquetas con direccionamiento }
+  STOP_V := TAGS.OPCItems.AddItem('[L2_LD]B3:0/0');     // Botón STOP Virtual
+  START_V := TAGS.OPCItems.AddItem('[L2_LD]B3:0/1');    // Botón START Virtual
+  LAMP := TAGS.OPCItems.AddItem('[L2_LD]O:2.0/0');       // Lámpara indicadora
+end;
+
+
+// Método para obtener tópicos
+procedure GetAllItems(Browser: TdOPCBrowser; ItemList: TStrings; Level: integer = 0);
+var
+  i          : integer;
+  Items      : TdOPCBrowseItems;
+  BrowseItem : TdOPCBrowseItem;
+  LevelStr   : string;
+begin
+  Browser.Browse;                        // get all Branches and Items in this level from OPC Server
+  Items  := TdOPCBrowseItems.Create;     // create a new list
+  Items.Assign(Browser.Items);           // save and copy Items in new List
+
+  for i := 0 to Level do
+    ItemList.Add(Browser.CurrentPosition.Name);  // Show name of folder
+
+  for i := 0 to Items.Count-1 do         // for all items in current path
+  begin
+     BrowseItem := Items[i];
+     if BrowseItem.IsFolder then           // if browse item is not a folder
+        ItemList.Add(BrowseItem.ItemId)  // add Itemid to list
+  end;
+end;
+
+// Método de menú desplegable de tópicos
+procedure TForm1.cbTopicDropDown(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    GetAllItems(OPCClient.Browser,cbTopic.Items);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+
+end;
+
+ // Método de escritura en OPC
+function WriteOPCItem(OpcServer: TdOPCDAClient; Groupname: string; ItemName: string; Value: Variant): boolean;
+var
+  WriteGroup  : TdOPCGroup;
+  Item        : TdOPCItem;
+begin
+  result := false;
+  WriteGroup := OPCServer.OPCGroups.GetOPCGroup(GroupName);
+  if WriteGroup <> nil then
+  begin
+    Item := WriteGroup.OPCItems.FindOPCItem(ItemName); // find Item by Name
+    if Item <> nil then
+    begin
+      Item.WriteSync(Value);                           // now write Value
+      result := true;
+    end;
+  end;
+end;
+
+ // Método de lectura en OPC
+function ReadOPCItem(OpcServer: TdOPCDAClient; Groupname: string; ItemName: string): Variant;
+var
+  ReadGroup  : TdOPCGroup;
+  Item       : TdOPCItem;
+begin
+  result := false;
+  ReadGroup := OPCServer.OPCGroups.GetOPCGroup(GroupName);
+  if ReadGroup.SyncRead() then
+  begin
+    Item := ReadGroup.OPCItems.FindOPCItem(ItemName); // find Item by Name
+    if Item <> nil then
+    begin
+      result := Item.ValueStr;                           // now write Value
+    end;
+  end
+  else
+     ShowMessage('No es posible escribir valor');
+end;
+
+
+// Método de presionar botón Start
+procedure TForm1.bStartMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  imgRobot.Picture.LoadFromFile('warehouse_en.png');
+  if not WriteOPCItem(OPCClient,'TAGS' ,START_V.ItemName,'1') then
+    ShowMessage('No fue posible escribir en bit B3:0/1');
+end;
+
+// Método de soltar botón Start
+procedure TForm1.bStartMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if not WriteOPCItem(OPCClient,'TAGS' ,START_V.ItemName,'0') then
+    ShowMessage('No fue posible escribir en bit B3:0/1');
+end;
+
+// Método de presionar botón Stop
+procedure TForm1.bStopMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if not WriteOPCItem(OPCClient,'TAGS' ,STOP_V.ItemName,'1') then
+    ShowMessage('No fue posible escribir en bit B3:0/0');
+end;
+
+// Método de soltar botón Stop
+procedure TForm1.bStopMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if not WriteOPCItem(OPCClient,'TAGS' ,STOP_V.ItemName,'0') then
+    ShowMessage('No fue posible escribir en bit B3:0/0');
+end;
+
+// Método de creación de ventana
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  OPCClient.OPCGroups.Add('PRUEBA');  // you must at leat add one group to handle OPC Items
+end;
+
+procedure TForm1.imgRobotClick(Sender: TObject);
+begin
+
+end;
+
+// Evento OPCServer->OnConnect
+procedure TForm1.OPCClientConnect(Sender: TObject);
+begin
+  ShowMessage('Servidor OPC conectado');
+end;
+
+// Evento OPCServer->OnDisConnect
+procedure TForm1.OPCClientDatachange(Sender: TObject; ItemList: TdOPCItemList);
+begin
+  if ItemList.Count > 0 then
+  begin
+    if ReadOPCItem(OPCClient,'TAGS',LAMP.ItemName) = '1' then
+    begin
+      imgRobot.Visible := false;
+      imgRobot.Picture.LoadFromFile('warehouse_en.png');
+      imgRobot.Visible := true
+    end;
+
+    if ReadOPCItem(OPCClient,'TAGS',LAMP.ItemName) = '0' then
+    begin
+      imgRobot.Visible := false;
+      imgRobot.Picture.LoadFromFile('warehouse_dis.png');
+      imgRobot.Visible := true;
+    end;
+  end
+end;
+
+
+procedure TForm1.OPCClientDisconnect(Sender: TObject);
+begin
+  OPCClient.OPCGroups[0].OPCItems.RemoveAll;  // remove all Items
+  ShowMessage('Servidor OPC desconectado');
+end;
+
+// Evento OPCServer->OnTimeout
+procedure TForm1.OPCClientTimeout(Sender: TObject);
+begin
+  ShowMessage('Servidor OPC no responde');
+end;
+
+procedure TForm1.pMainClick(Sender: TObject);
+begin
+
+end;
+
+// Método de pulsar botón izquierda
+procedure TForm1.bLeftClick(Sender: TObject);
+begin
+if imgRobot.Left >= 288 then
+  begin
+    imgRobot.Left := imgRobot.Left - 10;
+    Application.ProcessMessages;
+  end;
+end;
+
+// Método de pulsar botón derecha
+procedure TForm1.bRightClick(Sender: TObject);
+begin
+if imgRobot.Left <= 648 then
+  begin
+    imgRobot.Left := imgRobot.Left + 10;
+    Application.ProcessMessages;
+  end;
+end;
+
+
+end.
